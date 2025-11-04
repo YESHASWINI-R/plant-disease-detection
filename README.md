@@ -256,15 +256,3 @@ plant-disease-detection/
 ├── plant_disease_prediction_model.h5
 └── dataset/
 ```
-
----
-
-## Future Work
-
-* Implement transfer learning using VGG16 or ResNet50.
-* Develop a Flask/Streamlit web app for real-time predictions.
-* Deploy the model on cloud platforms like AWS or Google Cloud.
-
----
-
-Would you like me to include a **requirements.txt** section (so you can upload that to GitHub too)? It lists all the pip dependencies needed to run this notebook.
