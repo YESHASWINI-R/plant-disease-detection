@@ -1,258 +1,296 @@
-# Plant Disease Detection using CNN
+# 🌿 Plant Disease Detection using CNN
 
-A Deep Learning Project for Sustainable Agriculture
+## 📘 Project Overview
 
----
-
-## Project Overview
-
-This project focuses on detecting plant diseases using Convolutional Neural Networks (CNN).
-The main goal is to help farmers identify crop diseases at an early stage, which reduces pesticide use and supports sustainable farming.
-By using image classification, the model can automatically recognize different types of leaf diseases and healthy leaves.
+This project detects plant leaf diseases using a **Convolutional Neural Network (CNN)** model trained on the **PlantVillage Dataset**.
+It helps farmers and researchers identify plant diseases early, supporting sustainable farming and reducing pesticide overuse.
 
 ---
 
-## Objectives
+## 🧠 Objectives
 
-* To build a CNN model for classifying plant leaf images.
-* To improve the accuracy of disease detection through image preprocessing and augmentation.
-* To support sustainability by reducing chemical usage through early disease prediction.
-* To make a simple and easy-to-use system that can help farmers and researchers.
-
----
-
-## Sustainability Impact
-
-This project supports **Sustainable Development Goal (SDG 12: Responsible Consumption and Production)** by promoting efficient pesticide use and minimizing environmental harm.
-Early detection of plant diseases helps to:
-
-* Reduce the overuse of harmful chemicals.
-* Increase crop yield and quality.
-* Promote eco-friendly agricultural practices.
+* Identify whether a plant leaf is **healthy or diseased**.
+* Improve crop quality and yield using AI-based disease prediction.
+* Promote **eco-friendly agricultural practices**.
 
 ---
 
-## Model Details
+## ⚙️ Source Code
 
-* Algorithm Used: Convolutional Neural Network (CNN)
-* Layers: Conv2D, MaxPooling2D, Flatten, Dense
-* Optimizer: Adam
-* Loss Function: Categorical Crossentropy
-* Accuracy Achieved: Around 88–90% on validation data
-
----
-
-## Dataset Information
-
-* **Dataset Used:** PlantVillage Dataset
-* **Source:** [Kaggle - PlantVillage Dataset](https://www.kaggle.com/datasets/abdallahalidev/plantvillage-dataset)
-* **Classes:** 38 plant types (healthy and diseased)
-* **Preprocessing Steps:**
-
-  * Resizing images to 224×224
-  * Normalizing pixel values
-  * Data augmentation (rotation, flipping)
-
----
-
-## Technologies Used
-
-* Python
-* TensorFlow / Keras
-* NumPy
-* Matplotlib
-* PIL (Python Imaging Library)
-* Google Colab
-* Kaggle API
-
----
-
-## Improvisations Done
-
-* Resized and cleaned images to improve dataset quality.
-* Used image augmentation for better generalization.
-* Built a CNN model and planned to test pretrained models like VGG16.
-* Focused on sustainability by helping reduce pesticide usage.
-* Planned to develop a simple UI for prediction.
-
----
-
-## Source Code
-
-### 1. Import Libraries and Set Seeds
+### **1️⃣ Install & Import Libraries**
 
 ```python
-import os, random, json
-import numpy as np
-import tensorflow as tf
-from zipfile import ZipFile
-from PIL import Image
-import matplotlib.pyplot as plt
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras import layers, models
+!pip install tensorflow matplotlib
 
-# Set seeds for reproducibility
-random.seed(0)
-np.random.seed(0)
-tf.random.set_seed(0)
+import tensorflow as tf
+from tensorflow.keras import layers, models
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+import random
 ```
 
 ---
 
-### 2. Download Dataset from Kaggle
+### **2️⃣ Upload & Extract Dataset**
 
 ```python
-!pip install kaggle
+from google.colab import drive
+drive.mount('/content/drive')
 
-kaggle_credentails = json.load(open("kaggle.json"))
-os.environ['KAGGLE_USERNAME'] = kaggle_credentails["username"]
-os.environ['KAGGLE_KEY'] = kaggle_credentails["key"]
+import os, json
+from zipfile import ZipFile
 
+# Load Kaggle credentials
+kaggle_dict = json.load(open("kaggle.json"))
+os.environ["KAGGLE_USERNAME"] = kaggle_dict["username"]
+os.environ["KAGGLE_KEY"] = kaggle_dict["key"]
+
+# Download dataset
 !kaggle datasets download -d abdallahalidev/plantvillage-dataset
 
-with ZipFile("plantvillage-dataset.zip", 'r') as zip_ref:
-    zip_ref.extractall()
+# Extract dataset
+with ZipFile("plantvillage-dataset.zip", "r") as zip_ref:
+    zip_ref.extractall("/content/plantvillage_dataset")
 
-base_dir = "plantvillage dataset/color"
+print("Dataset extracted successfully!")
+print(os.listdir("/content/plantvillage_dataset"))
 ```
+
+**Dataset:** [PlantVillage Dataset](https://www.kaggle.com/datasets/abdallahalidev/plantvillage-dataset)
 
 ---
 
-### 3. Data Preprocessing and Train-Test Split
+### **3️⃣ Set Random Seeds for Reproducibility**
 
 ```python
-img_size = 224
-batch_size = 32
-
-data_gen = ImageDataGenerator(rescale=1./255, validation_split=0.2)
-
-train_generator = data_gen.flow_from_directory(
-    base_dir,
-    target_size=(img_size, img_size),
-    batch_size=batch_size,
-    subset='training',
-    class_mode='categorical'
-)
-
-validation_generator = data_gen.flow_from_directory(
-    base_dir,
-    target_size=(img_size, img_size),
-    batch_size=batch_size,
-    subset='validation',
-    class_mode='categorical'
-)
+seed_value = 42
+tf.random.set_seed(seed_value)
+np.random.seed(seed_value)
+random.seed(seed_value)
 ```
 
 ---
 
-### 4. CNN Model Building
+### **4️⃣ Prepare Data Generators with Augmentation**
+
+```python
+base_dir = "/content/plantvillage_dataset/plantvillage dataset/color"
+img_size = 128
+batch_size = 32
+
+datagen = ImageDataGenerator(
+    rescale=1./255,
+    validation_split=0.2,
+    rotation_range=20,
+    width_shift_range=0.2,
+    height_shift_range=0.2,
+    zoom_range=0.2,
+    horizontal_flip=True,
+    fill_mode='nearest'
+)
+
+train_data = datagen.flow_from_directory(
+    base_dir,
+    target_size=(img_size, img_size),
+    batch_size=batch_size,
+    class_mode='categorical',
+    subset='training',
+    seed=seed_value
+)
+
+val_data = datagen.flow_from_directory(
+    base_dir,
+    target_size=(img_size, img_size),
+    batch_size=batch_size,
+    class_mode='categorical',
+    subset='validation',
+    seed=seed_value
+)
+
+print("Number of Classes:", len(train_data.class_indices))
+```
+
+---
+
+### **5️⃣ Build CNN Model**
 
 ```python
 model = models.Sequential([
-    layers.Conv2D(32, (3,3), activation='relu', input_shape=(img_size, img_size, 3)),
-    layers.MaxPooling2D(2,2),
-    layers.Conv2D(64, (3,3), activation='relu'),
-    layers.MaxPooling2D(2,2),
+    layers.Conv2D(32, (3, 3), activation='relu', input_shape=(img_size, img_size, 3)),
+    layers.MaxPooling2D(2, 2),
+
+    layers.Conv2D(64, (3, 3), activation='relu'),
+    layers.MaxPooling2D(2, 2),
+
+    layers.Conv2D(128, (3, 3), activation='relu'),
+    layers.MaxPooling2D(2, 2),
+
     layers.Flatten(),
-    layers.Dense(256, activation='relu'),
-    layers.Dense(train_generator.num_classes, activation='softmax')
+    layers.Dense(128, activation='relu'),
+    layers.Dropout(0.5),
+    layers.Dense(len(train_data.class_indices), activation='softmax')
 ])
 
-model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 model.summary()
 ```
 
 ---
 
-### 5. Model Training
+### **6️⃣ Train the Model**
 
 ```python
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
 history = model.fit(
-    train_generator,
-    steps_per_epoch=train_generator.samples // batch_size,
-    epochs=5,
-    validation_data=validation_generator,
-    validation_steps=validation_generator.samples // batch_size
+    train_data,
+    epochs=10,
+    validation_data=val_data
 )
 ```
 
 ---
 
-### 6. Model Evaluation
+### **7️⃣ Plot Training and Validation Accuracy**
 
 ```python
-val_loss, val_accuracy = model.evaluate(validation_generator)
-print(f"Validation Accuracy: {val_accuracy * 100:.2f}%")
-
-plt.plot(history.history['accuracy'], label='Train Accuracy')
+plt.plot(history.history['accuracy'], label='Training Accuracy')
 plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
-plt.legend()
 plt.title('Model Accuracy')
+plt.xlabel('Epochs')
+plt.ylabel('Accuracy')
+plt.legend()
+plt.show()
+
+plt.plot(history.history['loss'], label='Training Loss')
+plt.plot(history.history['val_loss'], label='Validation Loss')
+plt.title('Model Loss')
+plt.xlabel('Epochs')
+plt.ylabel('Loss')
+plt.legend()
 plt.show()
 ```
 
 ---
 
-### 7. Prediction Function
+### **8️⃣ Evaluate Model Performance**
 
 ```python
-def load_and_preprocess_image(image_path, target_size=(224, 224)):
-    img = Image.open(image_path).resize(target_size)
-    img_array = np.expand_dims(np.array(img) / 255.0, axis=0)
-    return img_array
-
-def predict_image_class(model, image_path, class_indices):
-    img_array = load_and_preprocess_image(image_path)
-    prediction = model.predict(img_array)
-    predicted_class = np.argmax(prediction, axis=1)[0]
-    return class_indices[predicted_class]
-
-class_indices = {v: k for k, v in train_generator.class_indices.items()}
-
-image_path = '/content/test_leaf.jpg'
-predicted_class = predict_image_class(model, image_path, class_indices)
-print("Predicted Class:", predicted_class)
+val_loss, val_accuracy = model.evaluate(val_data)
+print(f"Validation Accuracy: {val_accuracy * 100:.2f}%")
+print(f"Validation Loss: {val_loss:.4f}")
 ```
 
 ---
 
-### 8. Save Model
+### **9️⃣ Generate Classification Report & Confusion Matrix**
 
 ```python
-model.save('plant_disease_prediction_model.h5')
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
+import seaborn as sns
+
+true_labels = val_data.classes
+predictions = model.predict(val_data)
+predicted_labels = np.argmax(predictions, axis=1)
+class_names = list(val_data.class_indices.keys())
+
+# Classification Report
+print("Classification Report:\n")
+print(classification_report(true_labels, predicted_labels, target_names=class_names))
+
+# Confusion Matrix
+cm = confusion_matrix(true_labels, predicted_labels)
+plt.figure(figsize=(12, 10))
+sns.heatmap(cm, annot=False, cmap='Blues')
+plt.title("Confusion Matrix")
+plt.xlabel("Predicted Labels")
+plt.ylabel("True Labels")
+plt.show()
+
+# Overall Metrics
+accuracy = accuracy_score(true_labels, predicted_labels)
+precision = precision_score(true_labels, predicted_labels, average='macro')
+recall = recall_score(true_labels, predicted_labels, average='macro')
+f1 = f1_score(true_labels, predicted_labels, average='macro')
+
+print(f"Overall Accuracy: {accuracy * 100:.2f}%")
+print(f"Precision: {precision:.2f}")
+print(f"Recall: {recall:.2f}")
+print(f"F1 Score: {f1:.2f}")
 ```
 
 ---
 
-## How to Run the Project
+### **🔟 Save Model**
 
-1. Open **Google Colab**.
-2. Upload your **kaggle.json** credentials file.
-3. Run all the code cells in order.
-4. The dataset will automatically download and extract.
-5. Train the model and view accuracy/loss graphs.
-6. Upload a test image and predict its disease class.
+```python
+model.save("plant_disease_cnn.h5")
+print("Model saved successfully!")
+```
 
 ---
 
-## Sample Results
+### **🧪 Test Model with New Images**
 
-| Sample Image | Predicted Disease |
-| ------------ | ----------------- |
-| Apple Leaf   | Apple Black Rot   |
-| Tomato Leaf  | Tomato Leaf Mold  |
-| Potato Leaf  | Late Blight       |
+```python
+from tensorflow.keras.preprocessing import image
+from google.colab import files
+
+def predict_plant_disease(model, train_data):
+    uploaded = files.upload()
+    for img_name in uploaded.keys():
+        img_path = img_name
+        img = image.load_img(img_path, target_size=(128, 128))
+        img_array = image.img_to_array(img)
+        img_array = np.expand_dims(img_array, axis=0) / 255.0
+
+        pred = model.predict(img_array)
+        predicted_class = np.argmax(pred, axis=1)[0]
+        confidence = np.max(pred) * 100
+        class_labels = list(train_data.class_indices.keys())
+
+        plt.figure(figsize=(4, 4))
+        plt.imshow(image.load_img(img_path))
+        plt.axis('off')
+        plt.title(f"Prediction: {class_labels[predicted_class]}\nConfidence: {confidence:.2f}%", fontsize=12)
+        plt.show()
+
+        print(f"Predicted Class: {class_labels[predicted_class]}")
+        print(f"Model Confidence: {confidence:.2f}%\n")
+
+# Call the function
+predict_plant_disease(model, train_data)
+```
 
 ---
 
-## Project Structure
+## 📊 Evaluation Results
 
-```
-plant-disease-detection/
-│
-├── Plant_Disease_Detection.ipynb
-├── README.md
-├── kaggle.json
-├── plant_disease_prediction_model.h5
-└── dataset/
-```
+| Metric                  |  Score |
+| :---------------------- | :----: |
+| **Validation Accuracy** | 89.88% |
+| **Precision**           |  0.03  |
+| **Recall**              |  0.03  |
+| **F1 Score**            |  0.03  |
+
+---
+
+## 🌱 Sustainability Impact
+
+This project contributes to **UN Sustainable Development Goal (SDG 12: Responsible Consumption and Production)**.
+By enabling early detection of plant diseases, it helps to:
+
+* Reduce unnecessary pesticide use.
+* Increase crop yield and product quality.
+* Encourage sustainable and environment-friendly farming practices.
+
+---
+
+## 🚀 Future Enhancements
+
+* Deploy the model as a **mobile or web app** for real-time predictions.
+* Include **more crop species and disease types**.
+* Integrate **IoT and drone-based image collection** for live monitoring.
+
+---
