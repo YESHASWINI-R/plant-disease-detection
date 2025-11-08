@@ -2,16 +2,51 @@
 
 ## 📘 Project Overview
 
-This project detects plant leaf diseases using a **Convolutional Neural Network (CNN)** model trained on the **PlantVillage Dataset**.
-It helps farmers and researchers identify plant diseases early, supporting sustainable farming and reducing pesticide overuse.
+The **Plant Disease Detection** project uses **Deep Learning (CNN)** to automatically identify various plant leaf diseases from images.
+By analyzing leaf images, the model predicts whether the plant is healthy or diseased — and if diseased, which specific disease it has.
+This approach supports **precision agriculture**, helping farmers take quick and accurate action to prevent crop loss.
+
+---
+
+## 🌍 Introduction
+
+Plant diseases are one of the major causes of reduced crop yield worldwide. Traditionally, identifying diseases requires expert knowledge, which is time-consuming and expensive.
+This project provides an **AI-based automated system** that uses **Convolutional Neural Networks (CNNs)** to detect plant diseases from images of leaves.
+
+By using deep learning, farmers can quickly detect diseases, minimize pesticide misuse, and adopt sustainable farming techniques — reducing costs and promoting environmental safety.
 
 ---
 
 ## 🧠 Objectives
 
-* Identify whether a plant leaf is **healthy or diseased**.
-* Improve crop quality and yield using AI-based disease prediction.
-* Promote **eco-friendly agricultural practices**.
+* Detect whether a plant leaf is **healthy** or **diseased**.
+* Classify the disease type accurately using **CNN-based image classification**.
+* Reduce dependency on manual inspection and expert diagnosis.
+* Promote **eco-friendly and sustainable agriculture**.
+* Contribute to **UN Sustainable Development Goals (SDG 12 & SDG 15)**.
+
+---
+
+## ⚙️ Tools and Technologies
+
+| Component      | Description                                                                                 |
+| -------------- | ------------------------------------------------------------------------------------------- |
+| **Language**   | Python                                                                                      |
+| **Libraries**  | TensorFlow, Keras, NumPy, Matplotlib, Seaborn, Scikit-learn                                 |
+| **Dataset**    | [PlantVillage Dataset](https://www.kaggle.com/datasets/abdallahalidev/plantvillage-dataset) |
+| **Platform**   | Google Colab                                                                                |
+| **Model Type** | Convolutional Neural Network (CNN)                                                          |
+
+---
+
+## 🧩 Workflow
+
+1. Data collection and preprocessing using **Kaggle dataset**.
+2. Image augmentation for better generalization.
+3. CNN model design and training using Keras.
+4. Model evaluation using metrics such as accuracy, precision, recall, and F1-score.
+5. Prediction on unseen leaf images.
+6. Visualization of results with confidence score.
 
 ---
 
@@ -42,15 +77,12 @@ drive.mount('/content/drive')
 import os, json
 from zipfile import ZipFile
 
-# Load Kaggle credentials
 kaggle_dict = json.load(open("kaggle.json"))
 os.environ["KAGGLE_USERNAME"] = kaggle_dict["username"]
 os.environ["KAGGLE_KEY"] = kaggle_dict["key"]
 
-# Download dataset
 !kaggle datasets download -d abdallahalidev/plantvillage-dataset
 
-# Extract dataset
 with ZipFile("plantvillage-dataset.zip", "r") as zip_ref:
     zip_ref.extractall("/content/plantvillage_dataset")
 
@@ -58,11 +90,9 @@ print("Dataset extracted successfully!")
 print(os.listdir("/content/plantvillage_dataset"))
 ```
 
-**Dataset:** [PlantVillage Dataset](https://www.kaggle.com/datasets/abdallahalidev/plantvillage-dataset)
-
 ---
 
-### **3️⃣ Set Random Seeds for Reproducibility**
+### **3️⃣ Set Random Seeds**
 
 ```python
 seed_value = 42
@@ -73,7 +103,7 @@ random.seed(seed_value)
 
 ---
 
-### **4️⃣ Prepare Data Generators with Augmentation**
+### **4️⃣ Data Preparation and Augmentation**
 
 ```python
 base_dir = "/content/plantvillage_dataset/plantvillage dataset/color"
@@ -108,13 +138,11 @@ val_data = datagen.flow_from_directory(
     subset='validation',
     seed=seed_value
 )
-
-print("Number of Classes:", len(train_data.class_indices))
 ```
 
 ---
 
-### **5️⃣ Build CNN Model**
+### **5️⃣ CNN Model Architecture**
 
 ```python
 model = models.Sequential([
@@ -138,7 +166,7 @@ model.summary()
 
 ---
 
-### **6️⃣ Train the Model**
+### **6️⃣ Compile and Train the Model**
 
 ```python
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
@@ -152,7 +180,7 @@ history = model.fit(
 
 ---
 
-### **7️⃣ Plot Training and Validation Accuracy**
+### **7️⃣ Visualize Model Performance**
 
 ```python
 plt.plot(history.history['accuracy'], label='Training Accuracy')
@@ -184,7 +212,7 @@ print(f"Validation Loss: {val_loss:.4f}")
 
 ---
 
-### **9️⃣ Generate Classification Report & Confusion Matrix**
+### **9️⃣ Classification Report & Confusion Matrix**
 
 ```python
 from sklearn.metrics import classification_report, confusion_matrix, accuracy_score, precision_score, recall_score, f1_score
@@ -195,11 +223,8 @@ predictions = model.predict(val_data)
 predicted_labels = np.argmax(predictions, axis=1)
 class_names = list(val_data.class_indices.keys())
 
-# Classification Report
-print("Classification Report:\n")
 print(classification_report(true_labels, predicted_labels, target_names=class_names))
 
-# Confusion Matrix
 cm = confusion_matrix(true_labels, predicted_labels)
 plt.figure(figsize=(12, 10))
 sns.heatmap(cm, annot=False, cmap='Blues')
@@ -207,17 +232,6 @@ plt.title("Confusion Matrix")
 plt.xlabel("Predicted Labels")
 plt.ylabel("True Labels")
 plt.show()
-
-# Overall Metrics
-accuracy = accuracy_score(true_labels, predicted_labels)
-precision = precision_score(true_labels, predicted_labels, average='macro')
-recall = recall_score(true_labels, predicted_labels, average='macro')
-f1 = f1_score(true_labels, predicted_labels, average='macro')
-
-print(f"Overall Accuracy: {accuracy * 100:.2f}%")
-print(f"Precision: {precision:.2f}")
-print(f"Recall: {recall:.2f}")
-print(f"F1 Score: {f1:.2f}")
 ```
 
 ---
@@ -231,7 +245,7 @@ print("Model saved successfully!")
 
 ---
 
-### **🧪 Test Model with New Images**
+### **🧪 Predict Disease from New Images**
 
 ```python
 from tensorflow.keras.preprocessing import image
@@ -259,7 +273,6 @@ def predict_plant_disease(model, train_data):
         print(f"Predicted Class: {class_labels[predicted_class]}")
         print(f"Model Confidence: {confidence:.2f}%\n")
 
-# Call the function
 predict_plant_disease(model, train_data)
 ```
 
@@ -278,19 +291,31 @@ predict_plant_disease(model, train_data)
 
 ## 🌱 Sustainability Impact
 
-This project contributes to **UN Sustainable Development Goal (SDG 12: Responsible Consumption and Production)**.
-By enabling early detection of plant diseases, it helps to:
+This project directly aligns with the **United Nations Sustainable Development Goals (SDGs)**, especially:
 
-* Reduce unnecessary pesticide use.
-* Increase crop yield and product quality.
-* Encourage sustainable and environment-friendly farming practices.
+* **SDG 12: Responsible Consumption and Production**
+
+  * Reduces excessive use of pesticides by enabling early and accurate disease detection.
+  * Promotes efficient resource utilization and minimizes crop wastage.
+
+* **SDG 15: Life on Land**
+
+  * Encourages healthier agricultural ecosystems.
+  * Helps maintain biodiversity by preventing the spread of harmful crop diseases.
+
+**Overall Environmental Impact:**
+
+* Minimizes the use of harmful chemicals in agriculture.
+* Improves food security by increasing yield and quality.
+* Promotes **sustainable, tech-driven, and environment-friendly farming practices**.
 
 ---
 
 ## 🚀 Future Enhancements
 
-* Deploy the model as a **mobile or web app** for real-time predictions.
-* Include **more crop species and disease types**.
-* Integrate **IoT and drone-based image collection** for live monitoring.
+* Integrate **mobile app** for real-time field predictions.
+* Expand dataset with **more crops and diseases**.
+* Connect with **IoT-based leaf monitoring sensors**.
+* Deploy model on **cloud platforms** like AWS or Firebase for remote access.
 
 ---
